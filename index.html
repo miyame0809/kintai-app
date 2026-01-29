@@ -6,7 +6,7 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>お母さんの給与レコーダー</title>
+    <title>給与レコーダー</title>
     <style>
         :root {
             --primary-color: #e8aebb;
@@ -109,7 +109,7 @@
 </head>
 <body>
 
-    <h2>Kintai Recorder</h2>
+    <h2>勤怠管理アプリ_(:3 」∠)_</h2>
 
     <div class="card">
         <div class="input-group">
@@ -235,7 +235,8 @@
             });
 
             totalArea.innerHTML = `
-                <div style="font-size:0.8rem; color:#888;">${selectedMonth.replace('-', '年')}月 合計: ${decimalToJapanese(totalHours)}</div>
+                <div style="font-size:1.2rem; color:#888;">${selectedMonth.replace('-', '年')}月 </div>
+                <div class="total-salary">合計: ${decimalToJapanese(totalHours)} </div>
                 <div class="total-salary">${Math.floor(totalHours * wage).toLocaleString()} 円</div>
             `;
         }
