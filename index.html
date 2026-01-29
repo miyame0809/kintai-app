@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>お母さんの給与計算レコーダー</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #fffaf0; color: #333; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .input-group { margin-bottom: 10px; }
+        label { display: inline-block; width: 80px; font-weight: bold; }
+        input { padding: 8px; border: 1px solid #ddd; border-radius: 5px; width: 120px; }
+        .btn-save { padding: 12px; background: #ffa500; border: none; color: white; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 16px; margin-top: 10px; }
+        .btn-save:hover { background: #ff8c00; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; }
+        th, td { border-bottom: 1px solid #eee; padding: 12px; text-align: center; }
+        th { background: #fff4e0; }
+        .total-box { background: #333; color: white; padding: 15px; border-radius: 10px; margin-top: 20px; }
+        .delete-btn { color: #ff4d4d; border: none; background: none; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>勤怠レコーダー 🌸</h2>
+    <div class="input-group">
+        <label>時給(円):</label>
+        <input type="number" id="wage" value="1200" onchange="showData()">
+    </div>
+    <hr>
+    <div class="input-group">
+        <label>日付:</label>
+        <input type="date" id="date">
+    </div>
+    <div class="input-group">
+        <label>開始:</label>
+        <input type="time" id="start" value="09:00">
+    </div>
+    <div class="input-group">
+        <label>終了:</label>
+        <input type="time" id="end" value="18:00">
+    </div>
+    <div class="input-group">
+        <label>休憩(h):</label>
+        <input type="number" id="break" value="1.0" step="0.5">
+    </div>
+    <button class="btn-save" onclick="saveData()">この内容で記録する</button>
+</div>
+
+<div id="totalArea" class="total-box">
+    </div>
+
+<h3>今月の履歴</h3>
+<table id="recordTable">
+    <tr><th>日付</th><th>時間</th><th>給料</th><th></th></tr>
+</table>
+
+<button onclick="clearData()" style="margin-top:30px; background:none; border:none; color:gray; text-decoration:underline; cursor:pointer;">全データをリセット</button>
+
+<script>
+    window.onload = function() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('date').value = today;
+        
+        // 保存されていた時給があれば読み込む
+        const savedWage = localStorage.getItem('hourlyWage');
+        if(savedWage) document.getElementById('wage').value = savedWage;
+        
+        showData();
+    };
+
+    function saveData() {
+        const date = document.getElementById('date').value;
+        const start = document.getElementById('start').value;
+        const end = document.getElementById('end').value;
+        const rest = parseFloat(document.getElementById('break').value);
+        const wage = parseInt(document.getElementById('wage').value);
+
+        if(!date || !start || !end) { alert("入力漏れがあるよ！"); return; }
+
+        const s = start.split(':');
+        const e = end.split(':');
+        const diff = (parseInt(e[0]) + parseInt(e[1])/60) - (parseInt(s[0]) + parseInt(s[1])/60) - rest;
+
+        if (diff < 0) { alert("時間がマイナスだよ！"); return; }
+
+        const records = JSON.parse(localStorage.getItem('workRecords') || '[]');
+        records.push({ date, hours: diff.toFixed(1) });
+        records.sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        localStorage.setItem('workRecords', JSON.stringify(records));
+        localStorage.setItem('hourlyWage', wage); // 時給を保存
+
+        showData();
+        alert("保存したよ！お疲れ様✨");
+    }
+
+    function showData() {
+        const records = JSON.parse(localStorage.getItem('workRecords') || '[]');
+        const wage = parseInt(document.getElementById('wage').value) || 0;
+        const table = document.getElementById('recordTable');
+        const totalArea = document.getElementById('totalArea');
+        
+        table.innerHTML = '<tr><th>日付</th><th>時間</th><th>給料</th><th></th></tr>';
+        let totalHours = 0;
+
+        records.forEach((r, index) => {
+            const row = table.insertRow();
+            const daySalary = Math.floor(parseFloat(r.hours) * wage);
+            
+            row.insertCell(0).innerText = r.date.split('-').slice(1).join('/'); // 月/日で表示
+            row.insertCell(1).innerText = r.hours + "h";
+            row.insertCell(2).innerText = daySalary.toLocaleString() + "円";
+            
+            // 削除ボタン
+            const delCell = row.insertCell(3);
+            delCell.innerHTML = `<button class="delete-btn" onclick="deleteLine(${index})">✕</button>`;
+            
+            totalHours += parseFloat(r.hours);
+        });
+
+        const totalSalary = Math.floor(totalHours * wage);
+        totalArea.innerHTML = `
+            <div style="font-size:1.2em; margin-bottom:5px;">今月の合計労働: <b>${totalHours.toFixed(1)} 時間</b></div>
+            <div style="font-size:1.5em; color:#ffeb3b;">見込み給与: <b>${totalSalary.toLocaleString()} 円</b></div>
+        `;
+    }
+
+    function deleteLine(index) {
+        if(!confirm("この日の記録を消す？")) return;
+        const records = JSON.parse(localStorage.getItem('workRecords') || '[]');
+        records.splice(index, 1);
+        localStorage.setItem('workRecords', JSON.stringify(records));
+        showData();
+    }
+
+    function clearData() {
+        if(confirm("全部消しちゃうよ？いい？")) {
+            localStorage.removeItem('workRecords');
+            showData();
+        }
+    }
+</script>
+</body>
+</html>
