@@ -46,11 +46,24 @@
             padding: 10px;
             border: 1px solid #eee;
             border-radius: 10px;
-            width: 60%;
             background: #fdfdfd;
             font-size: 1rem;
             outline: none;
             -webkit-appearance: none;
+        }
+
+        /* セレクトボックスを横並びにするためのスタイル */
+        .time-select-group {
+            display: flex;
+            align-items: center;
+            width: 65%;
+            justify-content: flex-end;
+        }
+        .time-select-group select {
+            width: 70px;
+            margin: 0 5px;
+            text-align: center;
+            padding: 8px 5px;
         }
 
         .btn-save {
@@ -99,13 +112,33 @@
     <div class="card">
         <div class="input-group">
             <label>時給(円)</label>
-            <input type="number" id="wage" value="1200" onchange="updateWage()">
+            <input type="number" id="wage" value="1200" onchange="updateWage()" style="width: 60%;">
         </div>
         <hr style="border: 0; border-top: 1px solid #f5f5f5; margin: 15px 0;">
-        <div class="input-group"><label>日付</label><input type="date" id="date"></div>
-        <div class="input-group"><label>開始</label><input type="time" id="start" value="09:00"></div>
-        <div class="input-group"><label>終了</label><input type="time" id="end" value="18:00"></div>
-        <div class="input-group"><label>休憩時間</label><input type="time" id="break" value="01:00"></div>
+        <div class="input-group"><label>日付</label><input type="date" id="date" style="width: 60%;"></div>
+        <div class="input-group"><label>開始</label><input type="time" id="start" value="09:00" style="width: 60%;"></div>
+        <div class="input-group"><label>終了</label><input type="time" id="end" value="18:00" style="width: 60%;"></div>
+        
+        <div class="input-group">
+            <label>休憩時間</label>
+            <div class="time-select-group">
+                <select id="breakH">
+                    <option value="0">0</option>
+                    <option value="1" selected>1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                </select>
+                <span>時</span>
+                <select id="breakM">
+                    <option value="0">00</option>
+                    <option value="15">15</option>
+                    <option value="30">30</option>
+                    <option value="45">45</option>
+                </select>
+                <span>分</span>
+            </div>
+        </div>
+        
         <button class="btn-save" onclick="saveData()">記録を保存する</button>
     </div>
 
@@ -143,29 +176,40 @@
             showData();
         }
 
-        // 時間(HH:MM)を数値(1.5hなど)に変換する関数
         function timeToDecimal(timeStr) {
             const [hours, minutes] = timeStr.split(':').map(Number);
             return hours + (minutes / 60);
+        }
+
+        // 数値(1.75)を時間表記(1時間45分)に直す関数
+        function decimalToJapanese(decimal) {
+            const h = Math.floor(decimal);
+            const m = Math.round((decimal - h) * 60);
+            if (h === 0) return m + "分";
+            if (m === 0) return h + "時間";
+            return h + "時" + m + "分";
         }
 
         function saveData() {
             const date = document.getElementById('date').value;
             const startVal = document.getElementById('start').value;
             const endVal = document.getElementById('end').value;
-            const breakVal = document.getElementById('break').value;
+            
+            // 新しいセレクトボックスから取得
+            const breakH = parseInt(document.getElementById('breakH').value);
+            const breakM = parseInt(document.getElementById('breakM').value);
+            const rest = breakH + (breakM / 60);
 
-            if(!date || !startVal || !endVal || !breakVal) { alert("入力してね！"); return; }
+            if(!date || !startVal || !endVal) { alert("入力してね！"); return; }
 
             const start = timeToDecimal(startVal);
             const end = timeToDecimal(endVal);
-            const rest = timeToDecimal(breakVal);
 
             const diff = end - start - rest;
-            if (diff < 0) { alert("休憩時間が勤務時間より長いよ！"); return; }
+            if (diff < 0) { alert("時間が変だよ！休憩を確認してね。"); return; }
 
             const records = JSON.parse(localStorage.getItem('workRecords') || '[]');
-            records.push({ date, hours: diff.toFixed(2) }); // 分単位なので小数点2位まで保存
+            records.push({ date, hours: diff.toFixed(2) });
             records.sort((a, b) => new Date(a.date) - new Date(b.date));
             localStorage.setItem('workRecords', JSON.stringify(records));
 
@@ -192,9 +236,9 @@
                 const h = parseFloat(r.hours);
                 const daySalary = Math.floor(h * wage);
                 
-                // 表示用に「1.75h」を「1時間45分」のように見せることもできますが、まずはシンプルに
                 row.insertCell(0).innerText = r.date.split('-')[2] + "日";
-                row.insertCell(1).innerText = h.toFixed(2) + "h"; 
+                // 日本語表記に変更
+                row.insertCell(1).innerText = decimalToJapanese(h); 
                 row.insertCell(2).innerText = daySalary.toLocaleString() + "円";
                 
                 const delCell = row.insertCell(3);
@@ -203,8 +247,9 @@
             });
 
             const totalSalary = Math.floor(totalHours * wage);
+            // 合計欄も日本語表記に
             totalArea.innerHTML = `
-                <div class="total-hours">${selectedMonth.replace('-', '年')}月 合計: ${totalHours.toFixed(2)} 時間</div>
+                <div class="total-hours">${selectedMonth.replace('-', '年')}月 合計: ${decimalToJapanese(totalHours)}</div>
                 <div class="total-salary">${totalSalary.toLocaleString()} 円</div>
             `;
         }
