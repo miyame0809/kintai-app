@@ -1,0 +1,20 @@
+{
+    "name": "お母さんの給与レコーダー",
+    "short_name": "給与レコ",
+    "start_url": "index.html",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#e8aebb",
+    "icons": [
+    {
+    "src": "icon.png",
+    "sizes": "192x192",
+    "type": "image/png"
+    },
+    {
+    "src": "icon.png",
+    "sizes": "512x512",
+    "type": "image/png"
+    }
+    ]
+}
