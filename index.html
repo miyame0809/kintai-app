@@ -6,7 +6,7 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>給与レコーダー</title>
+    <title>給料レコーダー</title>
     <style>
         :root {
             --primary-color: #e8aebb;
@@ -40,13 +40,6 @@
             justify-content: space-between;
         }
 
-        .input-sub-group {
-            display: flex;
-            flex-direction: column;
-            width: 60%;
-            gap: 10px;
-        }
-
         label { font-weight: 600; font-size: 0.85rem; }
 
         input, select {
@@ -57,7 +50,6 @@
             font-size: 1rem;
             outline: none;
             -webkit-appearance: none;
-            width: 100%;
         }
 
         .btn-save {
@@ -74,6 +66,40 @@
             margin-top: 10px;
         }
 
+        /* --- 表示月選択のデザインを強化 --- */
+    .month-selector-container {
+        background: white;
+        padding: 15px;
+        border-radius: 15px;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+    }
+
+        .month-selector-container label {
+            font-size: 0.75rem;
+            color: #888;
+        }
+        
+    #displayMonth {
+        border: 2px solid var(--primary-color);
+        color: var(--accent-color);
+        font-weight: bold;
+        padding: 8px 30px 8px 15px; /* 右側に三角用のスペースを空ける */
+        width: auto;
+        text-align: center;
+        background-color: #fff;
+        /* ▼ 下三角アイコンを背景画像として追加 */
+        background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="%23d18d9b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>');
+        background-repeat: no-repeat;
+        background-position: right 10px center; /* 右端から10pxの位置に配置 */
+        background-size: 12px;
+        cursor: pointer;
+    }
+
         .total-box {
             background: white;
             padding: 20px;
@@ -85,16 +111,15 @@
 
         .total-salary { font-size: 1.4rem; color: var(--accent-color); font-weight: bold; }
 
-        .month-filter { text-align: center; margin-bottom: 15px; }
-        .month-filter select {
-            width: auto; border: none; background: none; font-weight: bold; color: var(--accent-color); font-size: 1.1rem; text-align-last: center;
-        }
-
         table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
         th { font-size: 0.75rem; color: #999; text-align: center; font-weight: normal; }
         td { background: white; padding: 12px; text-align: center; font-size: 0.85rem; }
-        td:first-child { border-radius: 12px 0 0 12px; }
+        td:first-child { border-radius: 12px 0 0 12px; font-weight: bold; }
         td:last-child { border-radius: 0 12px 12px 0; }
+
+        .weekday-sat { color: #4a90e2; font-size: 0.7rem; }
+        .weekday-sun { color: #e24a4a; font-size: 0.7rem; }
+        .weekday-normal { color: #999; font-size: 0.7rem; }
 
         .delete-btn { color: #ccc; border: none; background: none; font-size: 1.2rem; }
         
@@ -132,8 +157,9 @@
         <button class="btn-save" onclick="saveData()">記録を保存する</button>
     </div>
 
-    <div class="month-filter">
-        表示：<select id="displayMonth" onchange="showData()"></select>
+    <div class="month-selector-container">
+        <label>表示する月：</label>
+        <select id="displayMonth" onchange="showData()"></select>
     </div>
 
     <div id="totalArea" class="total-box"></div>
@@ -148,7 +174,9 @@
             const now = new Date();
             document.getElementById('date').value = now.toISOString().split('T')[0];
             const select = document.getElementById('displayMonth');
-            for (let i = -6; i <= 6; i++) {
+            
+            // 過去1年から未来3ヶ月分まで選べるように
+            for (let i = -12; i <= 3; i++) {
                 const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
                 const val = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
                 const text = `${d.getFullYear()}年 ${d.getMonth() + 1}月`;
@@ -179,6 +207,17 @@
             return h + "時間" + m + "分";
         }
 
+        // 曜日を取得する関数
+        function getDayOfWeek(dateStr) {
+            const days = ['日', '月', '火', '水', '木', '金', '土'];
+            const date = new Date(dateStr);
+            const dayNum = date.getDay();
+            let cls = 'weekday-normal';
+            if (dayNum === 0) cls = 'weekday-sun';
+            if (dayNum === 6) cls = 'weekday-sat';
+            return `<br><span class="${cls}">(${days[dayNum]})</span>`;
+        }
+
         function saveData() {
             const date = document.getElementById('date').value;
             const startVal = document.getElementById('start').value;
@@ -193,13 +232,11 @@
             const out = timeToDecimal(outVal);
             const ret = timeToDecimal(returnVal);
 
-            // 外出時間を計算
             const breakTime = ret - out;
-            // 実労働時間を計算（退勤-出勤 - 外出時間）
             const diff = end - start - breakTime;
 
-            if (breakTime < 0) { alert("出戻り時間は外出時間より後に設定してね！"); return; }
-            if (diff < 0) { alert("勤務時間がマイナスです。入力ミスがないか確認してね！"); return; }
+            if (breakTime < 0) { alert("出戻り時間は外出より後にしてね！"); return; }
+            if (diff < 0) { alert("勤務時間がマイナスです！"); return; }
 
             const records = JSON.parse(localStorage.getItem('workRecords') || '[]');
             records.push({ date, hours: diff.toFixed(2) });
@@ -226,7 +263,9 @@
                 const originalIndex = records.indexOf(r);
                 const row = table.insertRow();
                 const h = parseFloat(r.hours);
-                row.insertCell(0).innerText = r.date.split('-')[2] + "日";
+                
+                // 日付 + 曜日を表示
+                row.insertCell(0).innerHTML = r.date.split('-')[2] + "日" + getDayOfWeek(r.date);
                 row.insertCell(1).innerText = decimalToJapanese(h); 
                 row.insertCell(2).innerText = Math.floor(h * wage).toLocaleString() + "円";
                 const delCell = row.insertCell(3);
@@ -235,8 +274,7 @@
             });
 
             totalArea.innerHTML = `
-                <div style="font-size:1.2rem; color:#888;">${selectedMonth.replace('-', '年')}月 </div>
-                <div class="total-salary">合計: ${decimalToJapanese(totalHours)} </div>
+                <div style="font-size:0.8rem; color:#888; margin-bottom:5px;">${selectedMonth.replace('-', '年')}月 合計時間: ${decimalToJapanese(totalHours)}</div>
                 <div class="total-salary">${Math.floor(totalHours * wage).toLocaleString()} 円</div>
             `;
         }
