@@ -3,8 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
     <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.png"> <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="給与レコ">
+
     <title>お母さんの給与レコーダー</title>
+    
     <style>
         :root {
             --primary-color: #e8aebb;
@@ -48,6 +54,7 @@
             background: #fdfdfd;
             font-size: 1rem;
             outline: none;
+            -webkit-appearance: none; /* スマホ独自のスタイルをリセット */
         }
 
         .btn-save {
@@ -62,7 +69,10 @@
             font-size: 1rem;
             box-shadow: 0 4px 12px rgba(232, 174, 187, 0.4);
             margin-top: 10px;
+            transition: 0.2s;
         }
+
+        .btn-save:active { transform: scale(0.98); opacity: 0.8; }
 
         .total-box {
             background: white;
@@ -76,11 +86,7 @@
         .total-hours { font-size: 0.8rem; margin-bottom: 5px; }
         .total-salary { font-size: 1.4rem; color: var(--accent-color); font-weight: bold; }
 
-        /* 月選択のデザイン */
-        .month-filter {
-            text-align: center;
-            margin-bottom: 15px;
-        }
+        .month-filter { text-align: center; margin-bottom: 15px; }
         .month-filter select {
             width: auto;
             border: none;
@@ -89,6 +95,7 @@
             color: var(--accent-color);
             font-size: 1.1rem;
             cursor: pointer;
+            text-align-last: center;
         }
 
         table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
@@ -97,7 +104,7 @@
         td:first-child { border-radius: 12px 0 0 12px; }
         td:last-child { border-radius: 0 12px 12px 0; }
 
-        .delete-btn { color: #ccc; border: none; background: none; font-size: 1.2rem; }
+        .delete-btn { color: #ccc; border: none; background: none; font-size: 1.2rem; cursor: pointer; }
     </style>
 </head>
 <body>
