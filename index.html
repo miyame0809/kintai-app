@@ -83,7 +83,7 @@
             font-size: 0.75rem;
             color: #888;
         }
-        
+
     #displayMonth {
         border: 2px solid var(--primary-color);
         color: var(--accent-color);
@@ -274,7 +274,7 @@
             });
 
             totalArea.innerHTML = `
-                <div style="font-size:0.8rem; color:#888; margin-bottom:5px;">${selectedMonth.replace('-', '年')}月 合計時間: ${decimalToJapanese(totalHours)}</div>
+                <div class="total-salary">合計時間: ${decimalToJapanese(totalHours)}</div>
                 <div class="total-salary">${Math.floor(totalHours * wage).toLocaleString()} 円</div>
             `;
         }
