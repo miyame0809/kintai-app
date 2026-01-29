@@ -3,14 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon.png"> <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="給与レコ">
-
+    <link rel="apple-touch-icon" href="icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>お母さんの給与レコーダー</title>
-    
     <style>
         :root {
             --primary-color: #e8aebb;
@@ -54,7 +50,7 @@
             background: #fdfdfd;
             font-size: 1rem;
             outline: none;
-            -webkit-appearance: none; /* スマホ独自のスタイルをリセット */
+            -webkit-appearance: none;
         }
 
         .btn-save {
@@ -69,10 +65,7 @@
             font-size: 1rem;
             box-shadow: 0 4px 12px rgba(232, 174, 187, 0.4);
             margin-top: 10px;
-            transition: 0.2s;
         }
-
-        .btn-save:active { transform: scale(0.98); opacity: 0.8; }
 
         .total-box {
             background: white;
@@ -83,19 +76,11 @@
             margin-bottom: 25px;
         }
 
-        .total-hours { font-size: 0.8rem; margin-bottom: 5px; }
         .total-salary { font-size: 1.4rem; color: var(--accent-color); font-weight: bold; }
 
         .month-filter { text-align: center; margin-bottom: 15px; }
         .month-filter select {
-            width: auto;
-            border: none;
-            background: none;
-            font-weight: bold;
-            color: var(--accent-color);
-            font-size: 1.1rem;
-            cursor: pointer;
-            text-align-last: center;
+            width: auto; border: none; background: none; font-weight: bold; color: var(--accent-color); font-size: 1.1rem; text-align-last: center;
         }
 
         table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
@@ -104,7 +89,7 @@
         td:first-child { border-radius: 12px 0 0 12px; }
         td:last-child { border-radius: 0 12px 12px 0; }
 
-        .delete-btn { color: #ccc; border: none; background: none; font-size: 1.2rem; cursor: pointer; }
+        .delete-btn { color: #ccc; border: none; background: none; font-size: 1.2rem; }
     </style>
 </head>
 <body>
@@ -120,7 +105,7 @@
         <div class="input-group"><label>日付</label><input type="date" id="date"></div>
         <div class="input-group"><label>開始</label><input type="time" id="start" value="09:00"></div>
         <div class="input-group"><label>終了</label><input type="time" id="end" value="18:00"></div>
-        <div class="input-group"><label>休憩(h)</label><input type="number" id="break" value="1.0" step="0.5"></div>
+        <div class="input-group"><label>休憩時間</label><input type="time" id="break" value="01:00"></div>
         <button class="btn-save" onclick="saveData()">記録を保存する</button>
     </div>
 
@@ -129,33 +114,27 @@
     </div>
 
     <div id="totalArea" class="total-box"></div>
-
     <table id="recordTable"></table>
 
     <div style="text-align: center; margin-top: 20px;">
-        <button onclick="clearData()" style="color:#bbb; border:none; background:none; font-size:0.7rem;">すべてのデータを消去</button>
+        <button onclick="clearData()" style="color:#bbb; border:none; background:none; font-size:0.7rem;">データを全消去</button>
     </div>
 
     <script>
         window.onload = function() {
             const now = new Date();
-            const today = now.toISOString().split('T')[0];
-            document.getElementById('date').value = today;
-
-            // 月選択メニューを作成（前後6ヶ月分）
+            document.getElementById('date').value = now.toISOString().split('T')[0];
             const select = document.getElementById('displayMonth');
             for (let i = -6; i <= 6; i++) {
                 const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
                 const val = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
                 const text = `${d.getFullYear()}年 ${d.getMonth() + 1}月`;
                 const opt = new Option(text, val);
-                if (i === 0) opt.selected = true; // 今月を選択状態に
+                if (i === 0) opt.selected = true;
                 select.add(opt);
             }
-
             const savedWage = localStorage.getItem('hourlyWage');
             if(savedWage) document.getElementById('wage').value = savedWage;
-
             showData();
         };
 
@@ -164,67 +143,74 @@
             showData();
         }
 
+        // 時間(HH:MM)を数値(1.5hなど)に変換する関数
+        function timeToDecimal(timeStr) {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            return hours + (minutes / 60);
+        }
+
         function saveData() {
             const date = document.getElementById('date').value;
-            const start = document.getElementById('start').value;
-            const end = document.getElementById('end').value;
-            const rest = parseFloat(document.getElementById('break').value);
-            if(!date || !start || !end) { alert("入力してね！"); return; }
+            const startVal = document.getElementById('start').value;
+            const endVal = document.getElementById('end').value;
+            const breakVal = document.getElementById('break').value;
 
-            const s = start.split(':');
-            const e = end.split(':');
-            const diff = (parseInt(e[0]) + parseInt(e[1])/60) - (parseInt(s[0]) + parseInt(s[1])/60) - rest;
-            if (diff < 0) { alert("時間が変だよ！"); return; }
+            if(!date || !startVal || !endVal || !breakVal) { alert("入力してね！"); return; }
+
+            const start = timeToDecimal(startVal);
+            const end = timeToDecimal(endVal);
+            const rest = timeToDecimal(breakVal);
+
+            const diff = end - start - rest;
+            if (diff < 0) { alert("休憩時間が勤務時間より長いよ！"); return; }
 
             const records = JSON.parse(localStorage.getItem('workRecords') || '[]');
-            records.push({ date, hours: diff.toFixed(1) });
+            records.push({ date, hours: diff.toFixed(2) }); // 分単位なので小数点2位まで保存
             records.sort((a, b) => new Date(a.date) - new Date(b.date));
             localStorage.setItem('workRecords', JSON.stringify(records));
 
-            // 保存した日付の月に自動で切り替える
             document.getElementById('displayMonth').value = date.substring(0, 7);
             showData();
-            alert("保存しました🌸");
+            alert("保存完了🌸");
         }
 
         function showData() {
             const records = JSON.parse(localStorage.getItem('workRecords') || '[]');
             const wage = parseInt(document.getElementById('wage').value) || 0;
-            const selectedMonth = document.getElementById('displayMonth').value; // YYYY-MM
+            const selectedMonth = document.getElementById('displayMonth').value;
             const table = document.getElementById('recordTable');
             const totalArea = document.getElementById('totalArea');
 
             table.innerHTML = '<tr><th>日付</th><th>時間</th><th>給料</th><th></th></tr>';
             let totalHours = 0;
 
-            // 選択された月のデータだけを抽出
             const filteredRecords = records.filter(r => r.date.startsWith(selectedMonth));
 
             filteredRecords.forEach((r, index) => {
-                // 元の配列(records)でのインデックスを探す（削除用）
                 const originalIndex = records.indexOf(r);
                 const row = table.insertRow();
-                const daySalary = Math.floor(parseFloat(r.hours) * wage);
+                const h = parseFloat(r.hours);
+                const daySalary = Math.floor(h * wage);
                 
-                row.insertCell(0).innerText = r.date.split('-')[2] + "日"; // 日付のみ表示
-                row.insertCell(1).innerText = r.hours + "h";
+                // 表示用に「1.75h」を「1時間45分」のように見せることもできますが、まずはシンプルに
+                row.insertCell(0).innerText = r.date.split('-')[2] + "日";
+                row.insertCell(1).innerText = h.toFixed(2) + "h"; 
                 row.insertCell(2).innerText = daySalary.toLocaleString() + "円";
                 
                 const delCell = row.insertCell(3);
                 delCell.innerHTML = `<button class="delete-btn" onclick="deleteLine(${originalIndex})">×</button>`;
-                
-                totalHours += parseFloat(r.hours);
+                totalHours += h;
             });
 
             const totalSalary = Math.floor(totalHours * wage);
             totalArea.innerHTML = `
-                <div class="total-hours">${selectedMonth.replace('-', '年')}月 合計: ${totalHours.toFixed(1)} 時間</div>
+                <div class="total-hours">${selectedMonth.replace('-', '年')}月 合計: ${totalHours.toFixed(2)} 時間</div>
                 <div class="total-salary">${totalSalary.toLocaleString()} 円</div>
             `;
         }
 
         function deleteLine(index) {
-            if(!confirm("この記録を消してもいい？")) return;
+            if(!confirm("消してもいい？")) return;
             const records = JSON.parse(localStorage.getItem('workRecords') || '[]');
             records.splice(index, 1);
             localStorage.setItem('workRecords', JSON.stringify(records));
@@ -232,7 +218,7 @@
         }
 
         function clearData() {
-            if(confirm("【注意】すべての月のデータが消えます！本当にいい？")) {
+            if(confirm("全消去します！いい？")) {
                 localStorage.removeItem('workRecords');
                 showData();
             }
