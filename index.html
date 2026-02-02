@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>給与レコーダー Pro</title>
+    <title>勤怠管理アプリ('ω')ノ</title>
     <style>
         :root {
             --primary-color: #e8aebb;
@@ -22,7 +22,7 @@
             margin: 0 auto;
         }
 
-        h2 { text-align: center; color: var(--accent-color); font-size: 1.2rem; margin-top: 5px; }
+        h2 { text-align: center; color: var(--accent-color); font-size: 1.2rem; margin: 10px 0; }
 
         .card {
             background: white;
@@ -31,6 +31,21 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.05);
             margin-bottom: 20px;
         }
+
+        /* 給与設定（上部） */
+        .wage-config {
+            background: white;
+            padding: 10px 20px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #eee;
+        }
+        .wage-config label { font-size: 0.8rem; font-weight: bold; color: var(--accent-color); }
+        .wage-config input { width: 80px; text-align: center; border: 1px solid #eee; border-radius: 8px; padding: 5px; font-weight: bold; color: var(--text-color); }
 
         /* 入力フォームのスタイル */
         .input-group { margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
@@ -119,7 +134,13 @@
 </head>
 <body>
 
-    <h2>給与レコーダー🌸</h2>
+    <h2>勤怠管理アプリ('ω')ノ🌼</h2>
+
+    <div class="wage-config">
+        <label>現在の時給:</label>
+        <input type="number" id="wage" value="1200" onchange="updateWage()">
+        <span style="font-size: 0.8rem; font-weight: bold;">円</span>
+    </div>
 
     <div class="card">
         <div class="input-group"><label>日付</label><input type="date" id="date" style="width: 55%;"></div>
@@ -127,11 +148,11 @@
         <div class="input-group"><label>退勤</label><input type="text" id="end" class="time-input" value="18:00"></div>
 
         <div class="gaishutsu-box">
-            <div class="input-group" style="margin-bottom:5px;"><label>外出</label><input type="text" id="out" class="time-input" placeholder="なしOK"></div>
-            <div class="input-group" style="margin-bottom:0;"><label>出戻</label><input type="text" id="return" class="time-input" placeholder="なしOK"></div>
+            <div class="input-group" style="margin-bottom:5px;"><label>外出</label><input type="text" id="out" class="time-input" placeholder="なし"></div>
+            <div class="input-group" style="margin-bottom:0;"><label>出戻</label><input type="text" id="return" class="time-input" placeholder="なし"></div>
         </div>
         
-        <button class="btn-save" onclick="saveData()">この日で保存</button>
+        <button class="btn-save" onclick="saveData()">保存</button>
     </div>
 
     <hr style="border:0; border-top: 1px dashed #ccc; margin: 30px 0;">
@@ -149,12 +170,8 @@
 
     <table id="recordTable"></table>
 
-    <div style="text-align: center; margin-top: 20px; padding-bottom: 40px;">
-        <div class="input-group" style="justify-content: center; gap: 10px;">
-            <label>時給(円):</label>
-            <input type="number" id="wage" value="1200" onchange="updateWage()" style="width: 80px; text-align: center;">
-        </div>
-        <button onclick="clearData()" style="color:#bbb; border:none; background:none; font-size:0.7rem; margin-top:15px;">全データ消去</button>
+    <div style="text-align: center; padding-bottom: 40px;">
+        <button onclick="clearData()" style="color:#bbb; border:none; background:none; font-size:0.7rem;">全データ消去</button>
     </div>
 
     <script>
@@ -210,7 +227,6 @@
 
         function setDate(dateStr) {
             document.getElementById('date').value = dateStr;
-            // 日付を選んだら入力欄までスムーズにスクロール
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -233,18 +249,18 @@
             const ret = parseTime(document.getElementById('return').value);
 
             if (!date || start === null || end === null) {
-                alert("日付と出退勤を入力してね！"); return;
+                alert("入力不足だよ！"); return;
             }
 
             let breakTime = (out !== null && ret !== null) ? (ret - out) : 0;
             const diff = end - start - breakTime;
 
-            if (diff < 0) { alert("時間がマイナスだよ。夜をまたぐなら25時とかで入力してみてね！"); return; }
+            if (diff < 0) { alert("時間が不正です"); return; }
 
             let records = JSON.parse(localStorage.getItem('workRecords') || '[]');
             const idx = records.findIndex(r => r.date === date);
             if (idx !== -1) {
-                if(!confirm("この日はもう記録があるよ。上書きする？")) return;
+                if(!confirm("上書きする？")) return;
                 records.splice(idx, 1);
             }
 
@@ -252,13 +268,12 @@
             records.sort((a, b) => new Date(a.date) - new Date(b.date));
             localStorage.setItem('workRecords', JSON.stringify(records));
 
-            // 外出欄をクリア
             document.getElementById('out').value = "";
             document.getElementById('return').value = "";
             
             renderCalendar();
             showData();
-            alert("保存しました🌸");
+            alert("保存完了🌸");
         }
 
         function showData() {
@@ -290,7 +305,7 @@
         }
 
         function deleteLine(date) {
-            if(!confirm("この日の記録を消す？")) return;
+            if(!confirm("消去しますか？")) return;
             let records = JSON.parse(localStorage.getItem('workRecords') || '[]');
             records = records.filter(r => r.date !== date);
             localStorage.setItem('workRecords', JSON.stringify(records));
@@ -299,7 +314,7 @@
         }
 
         function clearData() {
-            if(confirm("【警告】すべてのデータを消去します。よろしいですか？")) {
+            if(confirm("全データを消去します。よろしいですか？")) {
                 localStorage.clear();
                 location.reload();
             }
