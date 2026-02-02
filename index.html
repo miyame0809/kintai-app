@@ -3,59 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="給与レコーダー">
-    <title>給与レコーダー</title>
+    <title>給与レコーダー Pro</title>
     <style>
         :root {
             --primary-color: #e8aebb;
             --bg-color: #fcf8f7;
             --accent-color: #d18d9b;
             --text-color: #5a5a5a;
+            --today-bg: #ffeef2;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            padding: 20px;
+            padding: 15px;
             background-color: var(--bg-color);
             color: var(--text-color);
-            line-height: 1.6;
+            max-width: 500px;
+            margin: 0 auto;
         }
 
-        h2 { text-align: center; color: var(--accent-color); font-size: 1.2rem; margin-bottom: 10px; }
+        h2 { text-align: center; color: var(--accent-color); font-size: 1.2rem; margin-top: 5px; }
 
         .card {
             background: white;
             padding: 20px;
             border-radius: 20px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
-        .input-group {
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
+        /* 入力フォームのスタイル */
+        .input-group { margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
         label { font-weight: 600; font-size: 0.85rem; }
-
-        input, select {
-            padding: 10px;
+        input {
+            padding: 8px 12px;
             border: 1px solid #eee;
             border-radius: 10px;
-            background: #fdfdfd;
             font-size: 1rem;
             outline: none;
-            -webkit-appearance: none;
+        }
+        .time-input { width: 40%; text-align: center; }
+        
+        .gaishutsu-box {
+            background: #fff5f7;
+            padding: 12px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            border: 1px dashed var(--primary-color);
         }
 
         .btn-save {
-            padding: 15px;
+            padding: 12px;
             background: var(--primary-color);
             border: none;
             color: white;
@@ -63,196 +61,202 @@
             cursor: pointer;
             font-weight: bold;
             width: 100%;
-            font-size: 1rem;
             box-shadow: 0 4px 12px rgba(232, 174, 187, 0.4);
-            margin-top: 10px;
         }
 
-        .month-selector-container {
+        /* カレンダーのスタイル */
+        .calendar-card {
             background: white;
             padding: 15px;
-            border-radius: 15px;
-            margin-bottom: 15px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.03);
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            text-align: center;
+        }
+        .calendar-day-head { font-size: 0.7rem; color: #999; padding-bottom: 5px; }
+        .calendar-day {
+            aspect-ratio: 1/1;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-        }
-
-        .month-selector-container label {
-            font-size: 0.75rem;
-            color: #888;
-        }
-
-        #displayMonth {
-            border: 2px solid var(--primary-color);
-            color: var(--accent-color);
-            font-weight: bold;
-            padding: 8px 30px 8px 15px;
-            width: auto;
-            text-align: center;
-            background-color: #fff;
-            background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="%23d18d9b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>');
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            background-size: 12px;
+            font-size: 0.85rem;
+            border-radius: 10px;
             cursor: pointer;
+            position: relative;
         }
+        .has-record::after {
+            content: '●';
+            color: var(--primary-color);
+            font-size: 0.5rem;
+            position: absolute;
+            bottom: 2px;
+        }
+        .is-today { background: var(--today-bg); border: 1px solid var(--primary-color); }
 
+        /* 集計エリア */
         .total-box {
             background: white;
-            padding: 20px;
+            padding: 15px;
             border-radius: 20px;
             text-align: center;
             border: 2px solid var(--primary-color);
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
+        .total-salary { font-size: 1.2rem; color: var(--accent-color); font-weight: bold; }
 
-        .total-salary { font-size: 1.4rem; color: var(--accent-color); font-weight: bold; }
-
-        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
-        th { font-size: 0.75rem; color: #999; text-align: center; font-weight: normal; }
-        td { background: white; padding: 12px; text-align: center; font-size: 0.85rem; }
-        td:first-child { border-radius: 12px 0 0 12px; font-weight: bold; }
-        td:last-child { border-radius: 0 12px 12px 0; }
-
-        .weekday-sat { color: #4a90e2; font-size: 0.7rem; }
-        .weekday-sun { color: #e24a4a; font-size: 0.7rem; }
-        .weekday-normal { color: #999; font-size: 0.7rem; }
-
+        table { width: 100%; border-collapse: separate; border-spacing: 0 5px; margin-bottom: 50px; }
+        td { background: white; padding: 10px; text-align: center; font-size: 0.85rem; }
+        td:first-child { border-radius: 10px 0 0 10px; font-weight: bold; }
+        td:last-child { border-radius: 0 10px 10px 0; }
         .delete-btn { color: #ccc; border: none; background: none; font-size: 1.2rem; }
-        
-        .gaishutsu-box {
-            background: #fff5f7;
-            padding: 15px;
-            border-radius: 15px;
-            margin: 10px 0;
-            border: 1px dashed var(--primary-color);
-        }
     </style>
 </head>
 <body>
 
-    <h2>勤怠管理アプリ_(:3 」∠)_</h2>
+    <h2>給与レコーダー🌸</h2>
 
     <div class="card">
-        <div class="input-group">
-            <label>時給(円)</label>
-            <input type="number" id="wage" value="1200" onchange="updateWage()" style="width: 50%;">
-        </div>
-        <hr style="border: 0; border-top: 1px solid #f5f5f5; margin: 15px 0;">
-        
-        <div class="input-group"><label>日付</label><input type="date" id="date" style="width: 60%;"></div>
-        <div class="input-group"><label>出勤</label><input type="time" id="start" value="09:00" style="width: 60%;"></div>
-        <div class="input-group"><label>退勤</label><input type="time" id="end" value="18:00" style="width: 60%;"></div>
+        <div class="input-group"><label>日付</label><input type="date" id="date" style="width: 55%;"></div>
+        <div class="input-group"><label>出勤</label><input type="text" id="start" class="time-input" value="09:00"></div>
+        <div class="input-group"><label>退勤</label><input type="text" id="end" class="time-input" value="18:00"></div>
 
         <div class="gaishutsu-box">
-            <div style="font-size: 0.75rem; color: var(--accent-color); margin-bottom: 10px; font-weight: bold;">外出記録（中抜け）</div>
-            <div class="input-group"><label>外出</label><input type="time" id="out" value="12:00" style="width: 60%;"></div>
-            <div class="input-group"><label>出戻</label><input type="time" id="return" value="13:00" style="width: 60%;"></div>
-            <p style="font-size: 0.65rem; color: #999; margin: 0;">※外出がない場合は同じ時間にしてください。</p>
+            <div class="input-group" style="margin-bottom:5px;"><label>外出</label><input type="text" id="out" class="time-input" placeholder="なしOK"></div>
+            <div class="input-group" style="margin-bottom:0;"><label>出戻</label><input type="text" id="return" class="time-input" placeholder="なしOK"></div>
         </div>
         
-        <button class="btn-save" onclick="saveData()">記録を保存する</button>
+        <button class="btn-save" onclick="saveData()">この日で保存</button>
     </div>
 
-    <div class="month-selector-container">
-        <label>表示月：</label>
-        <select id="displayMonth" onchange="showData()"></select>
-    </div>
+    <hr style="border:0; border-top: 1px dashed #ccc; margin: 30px 0;">
 
     <div id="totalArea" class="total-box"></div>
+
+    <div class="calendar-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <button onclick="changeMonth(-1)" style="border:none; background:none; color:var(--accent-color); font-size:1.2rem;">◀</button>
+            <div id="currentMonthDisplay" style="font-weight: bold; color: var(--accent-color);"></div>
+            <button onclick="changeMonth(1)" style="border:none; background:none; color:var(--accent-color); font-size:1.2rem;">▶</button>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
+
     <table id="recordTable"></table>
 
-    <div style="text-align: center; margin-top: 20px;">
-        <button onclick="clearData()" style="color:#bbb; border:none; background:none; font-size:0.7rem;">データを全消去</button>
+    <div style="text-align: center; margin-top: 20px; padding-bottom: 40px;">
+        <div class="input-group" style="justify-content: center; gap: 10px;">
+            <label>時給(円):</label>
+            <input type="number" id="wage" value="1200" onchange="updateWage()" style="width: 80px; text-align: center;">
+        </div>
+        <button onclick="clearData()" style="color:#bbb; border:none; background:none; font-size:0.7rem; margin-top:15px;">全データ消去</button>
     </div>
 
     <script>
+        let currentViewDate = new Date();
+
         window.onload = function() {
-            const now = new Date();
-            document.getElementById('date').value = now.toISOString().split('T')[0];
-            const select = document.getElementById('displayMonth');
-            
-            for (let i = -12; i <= 3; i++) {
-                const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
-                const val = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
-                const text = `${d.getFullYear()}年 ${d.getMonth() + 1}月`;
-                const opt = new Option(text, val);
-                if (i === 0) opt.selected = true;
-                select.add(opt);
-            }
+            document.getElementById('date').value = new Date().toISOString().split('T')[0];
             const savedWage = localStorage.getItem('hourlyWage');
             if(savedWage) document.getElementById('wage').value = savedWage;
+            renderCalendar();
             showData();
         };
+
+        function changeMonth(diff) {
+            currentViewDate.setMonth(currentViewDate.getMonth() + diff);
+            renderCalendar();
+            showData();
+        }
 
         function updateWage() {
             localStorage.setItem('hourlyWage', document.getElementById('wage').value);
             showData();
         }
 
-        function timeToDecimal(timeStr) {
-            const [hours, minutes] = timeStr.split(':').map(Number);
-            return hours + (minutes / 60);
-        }
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            const display = document.getElementById('currentMonthDisplay');
+            grid.innerHTML = '';
+            
+            const year = currentViewDate.getFullYear();
+            const month = currentViewDate.getMonth();
+            display.innerText = `${year}年 ${month + 1}月`;
 
-        function decimalToJapanese(decimal) {
-            const h = Math.floor(decimal);
-            const m = Math.round((decimal - h) * 60);
-            if (h === 0) return m + "分";
-            if (m === 0) return h + "時間";
-            return h + "時間" + m + "分";
-        }
-
-        function getDayOfWeek(dateStr) {
             const days = ['日', '月', '火', '水', '木', '金', '土'];
-            const date = new Date(dateStr);
-            const dayNum = date.getDay();
-            let cls = 'weekday-normal';
-            if (dayNum === 0) cls = 'weekday-sun';
-            if (dayNum === 6) cls = 'weekday-sat';
-            return `<br><span class="${cls}">(${days[dayNum]})</span>`;
+            days.forEach(d => grid.innerHTML += `<div class="calendar-day-head">${d}</div>`);
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const lastDate = new Date(year, month + 1, 0).getDate();
+            const records = JSON.parse(localStorage.getItem('workRecords') || '[]');
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            for (let i = 0; i < firstDay; i++) grid.innerHTML += '<div></div>';
+
+            for (let d = 1; d <= lastDate; d++) {
+                const dateStr = `${year}-${(month + 1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+                const hasRecord = records.some(r => r.date === dateStr);
+                const isToday = dateStr === todayStr ? 'is-today' : '';
+                const recordClass = hasRecord ? 'has-record' : '';
+                
+                grid.innerHTML += `<div class="calendar-day ${isToday} ${recordClass}" onclick="setDate('${dateStr}')">${d}</div>`;
+            }
+        }
+
+        function setDate(dateStr) {
+            document.getElementById('date').value = dateStr;
+            // 日付を選んだら入力欄までスムーズにスクロール
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function parseTime(str) {
+            if (!str || str.trim() === "") return null;
+            let clean = str.replace(/[^0-9]/g, '');
+            if (clean.length === 0) return null;
+            if (clean.length <= 2) return parseInt(clean);
+            let h = parseInt(clean.substring(0, clean.length - 2));
+            let m = parseInt(clean.substring(clean.length - 2));
+            if (m >= 60) return null;
+            return h + (m / 60);
         }
 
         function saveData() {
             const date = document.getElementById('date').value;
-            const startVal = document.getElementById('start').value;
-            const endVal = document.getElementById('end').value;
-            const outVal = document.getElementById('out').value;
-            const returnVal = document.getElementById('return').value;
+            const start = parseTime(document.getElementById('start').value);
+            const end = parseTime(document.getElementById('end').value);
+            const out = parseTime(document.getElementById('out').value);
+            const ret = parseTime(document.getElementById('return').value);
 
-            if(!date || !startVal || !endVal || !outVal || !returnVal) { alert("入力してね！"); return; }
+            if (!date || start === null || end === null) {
+                alert("日付と出退勤を入力してね！"); return;
+            }
 
-            const start = timeToDecimal(startVal);
-            const end = timeToDecimal(endVal);
-            const out = timeToDecimal(outVal);
-            const ret = timeToDecimal(returnVal);
-
-            const breakTime = ret - out;
+            let breakTime = (out !== null && ret !== null) ? (ret - out) : 0;
             const diff = end - start - breakTime;
 
-            if (breakTime < 0) { alert("出戻り時間は外出より後にしてね！"); return; }
-            if (diff < 0) { alert("勤務時間がマイナスです！"); return; }
+            if (diff < 0) { alert("時間がマイナスだよ。夜をまたぐなら25時とかで入力してみてね！"); return; }
 
             let records = JSON.parse(localStorage.getItem('workRecords') || '[]');
-            
-            // --- 重複チェック ---
-            const existingIndex = records.findIndex(r => r.date === date);
-            if (existingIndex !== -1) {
-                if (!confirm(date + " はすでに記録があります。上書きしても大丈夫ですか？")) {
-                    return;
-                }
-                records.splice(existingIndex, 1);
+            const idx = records.findIndex(r => r.date === date);
+            if (idx !== -1) {
+                if(!confirm("この日はもう記録があるよ。上書きする？")) return;
+                records.splice(idx, 1);
             }
-            // ------------------
 
             records.push({ date, hours: diff.toFixed(2) });
             records.sort((a, b) => new Date(a.date) - new Date(b.date));
             localStorage.setItem('workRecords', JSON.stringify(records));
 
-            document.getElementById('displayMonth').value = date.substring(0, 7);
+            // 外出欄をクリア
+            document.getElementById('out').value = "";
+            document.getElementById('return').value = "";
+            
+            renderCalendar();
             showData();
             alert("保存しました🌸");
         }
@@ -260,48 +264,44 @@
         function showData() {
             const records = JSON.parse(localStorage.getItem('workRecords') || '[]');
             const wage = parseInt(document.getElementById('wage').value) || 0;
-            const selectedMonth = document.getElementById('displayMonth').value;
+            const currentMonthStr = `${currentViewDate.getFullYear()}-${(currentViewDate.getMonth() + 1).toString().padStart(2, '0')}`;
+            
             const table = document.getElementById('recordTable');
-            const totalArea = document.getElementById('totalArea');
-
-            table.innerHTML = '<tr><th>日付</th><th>実労働</th><th>給料</th><th></th></tr>';
+            table.innerHTML = '';
             let totalHours = 0;
 
-            const filteredRecords = records.filter(r => r.date.startsWith(selectedMonth));
-
-            filteredRecords.forEach((r, index) => {
-                const originalIndex = records.indexOf(r);
+            const filtered = records.filter(r => r.date.startsWith(currentMonthStr));
+            
+            filtered.forEach((r) => {
                 const row = table.insertRow();
                 const h = parseFloat(r.hours);
-                
-                row.insertCell(0).innerHTML = r.date.split('-')[2] + "日" + getDayOfWeek(r.date);
-                row.insertCell(1).innerText = decimalToJapanese(h); 
+                row.insertCell(0).innerText = r.date.split('-')[2] + "日";
+                row.insertCell(1).innerText = Math.floor(h) + "h" + Math.round((h%1)*60) + "m";
                 row.insertCell(2).innerText = Math.floor(h * wage).toLocaleString() + "円";
-                const delCell = row.insertCell(3);
-                delCell.innerHTML = `<button class="delete-btn" onclick="deleteLine(${originalIndex})">×</button>`;
+                row.insertCell(3).innerHTML = `<button class="delete-btn" onclick="deleteLine('${r.date}')">×</button>`;
                 totalHours += h;
             });
 
-            // あなたが送ってくれた「合計エリア」の記述をそのまま使用
-            totalArea.innerHTML = `
-                <div style="font-size:0.85rem; color:#888; margin-bottom:5px;">
-                <div class="total-salary">合計時間：${decimalToJapanese(totalHours)}</div>
+            document.getElementById('totalArea').innerHTML = `
+                <div style="font-size:0.8rem; color:#999;">${currentMonthStr.replace('-', '年')}月 分</div>
+                <div class="total-salary">${Math.floor(totalHours)}時間${Math.round((totalHours%1)*60)}分</div>
                 <div class="total-salary">${Math.floor(totalHours * wage).toLocaleString()} 円</div>
             `;
         }
 
-        function deleteLine(index) {
-            if(!confirm("消してもいい？")) return;
-            const records = JSON.parse(localStorage.getItem('workRecords') || '[]');
-            records.splice(index, 1);
+        function deleteLine(date) {
+            if(!confirm("この日の記録を消す？")) return;
+            let records = JSON.parse(localStorage.getItem('workRecords') || '[]');
+            records = records.filter(r => r.date !== date);
             localStorage.setItem('workRecords', JSON.stringify(records));
+            renderCalendar();
             showData();
         }
 
         function clearData() {
-            if(confirm("全消去します！いい？")) {
-                localStorage.removeItem('workRecords');
-                showData();
+            if(confirm("【警告】すべてのデータを消去します。よろしいですか？")) {
+                localStorage.clear();
+                location.reload();
             }
         }
     </script>
